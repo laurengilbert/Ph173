@@ -42,6 +42,10 @@ neff.extend((neffneutronlifetime, neffhierarchy, neffdilution, neffmass))
 
 #what is fort.91?  ~2.2e-2?
 
+#these are global so I can write them out to a file
+global minneutronlifetime, deltaneutronlifetime, maxneutronlifetime, mindilution, maxdilution, deltadilution, dminmass
+global dmaxmass, ddeltamass, maxmass, minmass, deltamass
+
 #in lists, bin 0 contains data from modified neutron lifetime, bin 1 contains data for both normal (1,0) and inverted (1,1)
 	#hierarchies, bin 2 contains linked lists for mass/dilution factors
 
@@ -190,6 +194,18 @@ if (str(delta) == "Y"):
 		f.close()
 		
 	# now the important bit: changing the sterile neutrino parameters
+	deuteriumdilutiononly = []
+	deuteriummass = []
+	deuterium[2].extend((deuteriumdilutiononly, deuteriummass))
+	
+	heliumdilutiononly = []
+	heliummass = []
+	helium[2].extend((heliumdilutiononly, heliummass))
+	
+	neffdilutiononly = []
+	neffmass = []
+	neff[2].extend((neffdilutiononly, neffmass))
+	
 	modifysteriles = raw_input("Do you want to change the dilution of the sterile species?  Y/N: ")
 	if (str(modifysteriles) == "Y" or str(modifysteriles) == "y"):
 		mindilution = raw_input("What is the lowest dilution factor you wish to use?  ")
@@ -229,11 +245,11 @@ if (str(delta) == "Y"):
 		alsomodifymass = raw_input("Do you want to modify the sterile neutrino mass as well?  Y/N: ")
 		
 		setmass = "false"
-		minmass = 0
-		maxmass = 0
-		deltmass = 0
+		dminmass = 0
+		dmaxmass = 0
+		ddeltamass = 0
 		
-		while (float(currdilution) < float(maxdilution)):
+		while (float(currdilution) <= float(maxdilution)):
 			newdilution = str(currdilution) + "d0 ! = stdil (dilution temperature of sterile nu)"
 					
 			#replace dilution factor
@@ -247,29 +263,24 @@ if (str(delta) == "Y"):
 					
 			if (str(alsomodifymass) == "Y" or str(alsomodifymass) == "y"):
 				if (setmass == "false"):
-					minmass = raw_input("What is the minimum sterile neutrino mass you wish to test?")
+					dminmass = raw_input("What is the minimum sterile neutrino mass you wish to test? ")
 					# I'm pretty sure that the code expects a mass in eV, but I should confirm that.
-					maxmass = raw_input("What is the maximum sterile neutrino mass you wish to test?")
-					deltamass = raw_input("How much do you want the sterile neutrino mass to change each run?")
+					dmaxmass = raw_input("What is the maximum sterile neutrino mass you wish to test? ")
+					ddeltamass = raw_input("How much do you want the sterile neutrino mass to change each run? ")
 					setmass = "true"
 					
-				currmass = float(minmass)
+				currmass = float(dminmass)
 					
 				starting2 = "1.0d0 ! = stmass (sterile nu mass)"
-				
-				print newfile
 					
-				while (float(currmass) < float(maxmass)):
+				while (float(currmass) <= float(dmaxmass)):
 					newmass = str(currmass) + "d0 ! = stmass (sterile nu mass)"
-					print newmass
 					
 					#replace dilution factor
 					loc2 = newfile.find(starting2)
-					print loc2
 						
 					# continue editing with mass value
 					newfile = newfile.replace(starting2, newmass)
-					print newfile
 						
 					#write out to file			
 					f = open('main_params.ini','w')
@@ -283,33 +294,33 @@ if (str(delta) == "Y"):
 					f2 = open('fort.95', 'r')
 					currdeu = float(f2.read())
 					f2.close()
-					deuterium[2].append(currdeu)
+					(deuterium[2])[1].append(currdeu)
 						
 					# copy helium abundance
 					f2 = open('fort.94', 'r')
 					currhelium = float(f2.read())
 					f2.close()
-					helium[2].append(currhelium)
+					(helium[2])[1].append(currhelium)
 			
 					# copy neff
 					f2 = open('fort.90', 'r')
 					currneff = float(f2.read())
 					f2.close()
-					neff[2].append(currneff)
+					(neff[2])[1].append(currneff)
 						
 					print "deuterium abundance: " + str(currdeu)
 					print "helium abundance: " + str(currhelium)
 					print "neff: " + str(currneff)
 						
 					starting2 = newmass
-					currmass = currmass + float(deltamass)
+					currmass = currmass + float(ddeltamass)
 						
 				# return to original state
 				f = open('main_params.ini', 'w')
 				f.write(filedata)
 				f.close()
 				
-				currmass = minmass
+				currmass = dminmass
 			else:
 				os.system("make clean; make depend; make")
 				os.system("./burst")
@@ -318,19 +329,19 @@ if (str(delta) == "Y"):
 				f2 = open('fort.95', 'r')
 				currdeu = float(f2.read())
 				f2.close()
-				deuterium[2].append(currdeu)
+				(deuterium[2])[0].append(currdeu)
 			
 				# copy helium abundance
 				f2 = open('fort.94', 'r')
 				currhelium = float(f2.read())
 				f2.close()
-				helium[2].append(currhelium)
+				(helium[2])[0].append(currhelium)
 			
 				# copy neff
 				f2 = open('fort.90', 'r')
 				currneff = float(f2.read())
 				f2.close()
-				neff[2].append(currneff)
+				(neff[2])[0].append(currneff)
 				
 			index1 = index1 + 1
 			starting = newdilution
@@ -409,3 +420,9 @@ if (str(delta) == "Y"):
 	print deuterium
 	print helium
 	print neff
+	
+	# neff, deuterium, helium need to be written out to files in a sensible data format -- presumably CSV
+	# I can't use a switch statement, since the above is designed to be able to run multiple types of variation in a single run
+	# so this is also going to be kludgey as hell
+	
+	
