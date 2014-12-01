@@ -220,6 +220,7 @@ if (str(delta) == "Y"):
 		f = open('main_params.ini','r')
 		filedata = f.read()
 		f.close()
+		orig = filedata
 			
 		#add a sterile species if not already defined
 		start = filedata.find("! = nnu (number of neutrinos, must be >= 3)") - 2
@@ -358,7 +359,7 @@ if (str(delta) == "Y"):
 		
 		# return to original state
 		f = open('main_params.ini', 'w')
-		f.write(filedata)
+		f.write(orig)
 		f.close()
 		
 	mass = raw_input("Do you want to change the sterile neutrino mass (without changing the dilution factor)?  Y/N: ")
